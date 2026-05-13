@@ -1,0 +1,56 @@
+{% extends 'library/base.html' %}
+
+{% block title %}{{ book.title }} - Bibliothèque en Ligne{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Bouton retour -->
+        <a href="{% url 'library:catalog' %}" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="fas fa-arrow-left"></i> Retour au catalogue
+        </a>
+        
+        <div class="card">
+            <div class="card-body p-4">
+                <!-- Titre et auteur -->
+                <h2 class="card-title mb-2">{{ book.title }}</h2>
+                <h5 class="card-subtitle mb-4 text-muted">par {{ book.author }}</h5>
+                
+                <!-- Informations du livre -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p class="mb-2">
+                            <strong>Catégorie :</strong> {{ book.category }}
+                        </p>
+                        <p class="mb-2">
+                            <strong>ISBN :</strong> {{ book.isbn }}
+                        </p>
+                        <p class="mb-2">
+                            <strong>Date de publication :</strong> {{ book.published_date|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2">
+                            <strong>Exemplaires totaux :</strong> {{ book.total_copies }}
+                        </p>
+                        <p class="mb-2">
+                            <strong>Disponibilité :</strong>
+                            {% if book.is_available %}
+                                <span class="badge bg-success">
+                                    {{ book.available_copies }}/{{ book.total_copies }} disponible(s)
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    Tous empruntés (0/{{ book.total_copies }})
+                                </span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <hr>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

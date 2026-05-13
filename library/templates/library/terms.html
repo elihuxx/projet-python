@@ -1,0 +1,121 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Conditions d'utilisation - Bibliothèque en Ligne{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Conditions d'utilisation</h2>
+            <a href="{% url 'library:profile' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-user"></i> Retour au profil
+            </a>
+        </div>
+
+        <p class="text-muted">Veuillez lire attentivement les règles régissant l'utilisation de notre bibliothèque.</p>
+
+        <div class="accordion" id="termsAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="tHeadingLoan">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#tCollapseLoan" aria-expanded="true" aria-controls="tCollapseLoan">
+                        Emprunt
+                    </button>
+                </h2>
+                <div id="tCollapseLoan" class="accordion-collapse collapse show" aria-labelledby="tHeadingLoan" data-bs-parent="#termsAccordion">
+                    <div class="accordion-body">
+                        <ul class="mb-0">
+                            <li>Maximum <strong>3 emprunts actifs</strong> par utilisateur.</li>
+                            <li>Durée d'emprunt standard de <strong>7 jours</strong>.</li>
+                            <li>Délai d'attente de <strong>1 jour</strong> avant de pouvoir réemprunter le <strong>même livre</strong> après son retour.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="tHeadingExtend">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tCollapseExtend" aria-expanded="false" aria-controls="tCollapseExtend">
+                        Prolongement
+                    </button>
+                </h2>
+                <div id="tCollapseExtend" class="accordion-collapse collapse" aria-labelledby="tHeadingExtend" data-bs-parent="#termsAccordion">
+                    <div class="accordion-body">
+                        <ul class="mb-0">
+                            <li>Un seul prolongement de <strong>5 jours</strong> est autorisé par emprunt.</li>
+                            <li>Le prolongement est possible lorsque l'emprunt est encore actif et qu'il reste <strong>exactement 1 jour</strong> avant la date de fin prévue.</li>
+                            <li>Quota de <strong>5 prolongements par mois</strong> et par utilisateur (géré automatiquement par le système).</li>
+                            <li>Les demandes sont soumises depuis la page profil et doivent être <strong>validées par un bibliothécaire</strong>.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="tHeadingReturn">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tCollapseReturn" aria-expanded="false" aria-controls="tCollapseReturn">
+                        Retour
+                    </button>
+                </h2>
+                <div id="tCollapseReturn" class="accordion-collapse collapse" aria-labelledby="tHeadingReturn" data-bs-parent="#termsAccordion">
+                    <div class="accordion-body">
+                        <ul class="mb-0">
+                            <li>Retour possible à tout moment tant que l'emprunt est actif, y compris après la date prévue.</li>
+                            <li>Il n'y a <strong>pas</strong> de retour automatique : le livre doit être rendu manuellement par le lecteur (via le site) ou par un bibliothécaire au comptoir.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="tHeadingLate">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tCollapseLate" aria-expanded="false" aria-controls="tCollapseLate">
+                        Retards
+                    </button>
+                </h2>
+                <div id="tCollapseLate" class="accordion-collapse collapse" aria-labelledby="tHeadingLate" data-bs-parent="#termsAccordion">
+                    <div class="accordion-body">
+                        <ul class="mb-0">
+                            <li>Un emprunt est <strong>en retard</strong> dès le lendemain de la date de fin prévue.</li>
+                            <li>Actuellement, aucune <strong>amende</strong> n'est calculée automatiquement par le site.</li>
+                            <li>En cas de retards répétés, l'équipe de la bibliothèque peut décider de <strong>restreindre manuellement</strong> vos nouveaux emprunts, conformément au règlement interne.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="tHeadingLegal">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tCollapseLegal" aria-expanded="false" aria-controls="tCollapseLegal">
+                        Aspects légaux et confidentialité
+                    </button>
+                </h2>
+                <div id="tCollapseLegal" class="accordion-collapse collapse" aria-labelledby="tHeadingLegal" data-bs-parent="#termsAccordion">
+                    <div class="accordion-body">
+                        <ul class="mb-0">
+                            <li><strong>Droit d'auteur</strong> : usage personnel et non commercial ; reproduction non autorisée interdite.</li>
+                            <li><strong>Protection des données</strong> : traitement conforme aux lois en vigueur (ex. RGPD).</li>
+                            <li><strong>Responsabilité</strong> : l'utilisateur est responsable de l'usage de son compte ; suspension en cas d'abus.</li>
+                            <li><strong>Mises à jour</strong> : les règles peuvent évoluer ; les changements importants seront annoncés.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="tHeadingContact">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tCollapseContact" aria-expanded="false" aria-controls="tCollapseContact">
+                        Contact
+                    </button>
+                </h2>
+                <div id="tCollapseContact" class="accordion-collapse collapse" aria-labelledby="tHeadingContact" data-bs-parent="#termsAccordion">
+                    <div class="accordion-body">
+                        <p class="mb-0">Pour toute question, contactez l'équipe via la page d'accueil ou l'administration.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

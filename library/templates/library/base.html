@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bibliothèque en Ligne{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-body: #f3f4f6;
+            --bg-surface: #ffffff;
+            --bg-card: #ffffff;
+            --clr-primary: #2563eb;
+            --clr-primary-soft: #1d4ed8;
+            --clr-accent: #16a34a;
+            --clr-text: #111827;
+            --clr-muted: #6b7280;
+            --radius-lg: 1rem;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(191, 219, 254, 0.9), transparent 60%),
+                radial-gradient(circle at bottom right, rgba(196, 181, 253, 0.7), transparent 60%),
+                var(--bg-body);
+            color: var(--clr-text);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: linear-gradient(90deg, #ffffff, #e5f0ff) !important;
+            box-shadow: 0 8px 24px rgba(148, 163, 184, 0.4);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: #111827 !important;
+            letter-spacing: 0.06em;
+        }
+
+        .navbar-brand i {
+            color: var(--clr-accent);
+        }
+
+        .navbar .nav-link {
+            color: var(--clr-muted);
+            font-weight: 500;
+        }
+        .navbar .nav-link:hover {
+            color: var(--clr-primary);
+        }
+
+        .main-content {
+            margin-top: 90px;
+            margin-bottom: 60px;
+        }
+        
+        .card {
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: var(--bg-card);
+            box-shadow: 0 10px 30px rgba(148, 163, 184, 0.4);
+            color: var(--clr-text);
+        }
+
+        .card .text-muted {
+            color: var(--clr-muted) !important;
+        }
+        
+        .btn-primary {
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-soft));
+            border: none;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.5);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #3730a3);
+        }
+
+        .btn-outline-primary {
+            border-radius: 999px;
+            border-color: rgba(59, 130, 246, 0.7);
+            color: var(--clr-primary);
+        }
+        .btn-outline-primary:hover {
+            background-color: rgba(37, 99, 235, 0.08);
+            color: var(--clr-primary-soft);
+        }
+
+        .badge {
+            border-radius: 999px;
+        }
+
+        .alert {
+            border-radius: 0.9rem;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'library:home' %}">
+                <i class="fas fa-book-reader"></i> Lectura
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'library:home' %}">
+                            <i class="fas fa-home"></i> Accueil
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'library:catalog' %}">
+                                <i class="fas fa-book"></i> Catalogue
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'library:my_borrows' %}">
+                                <i class="fas fa-bookmark"></i> Mes Emprunts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'library:logout' %}">
+                                <i class="fas fa-sign-out-alt"></i> Déconnexion
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'library:login' %}">
+                                <i class="fas fa-sign-in-alt"></i> Connexion
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'library:register' %}">
+                                <i class="fas fa-user-plus"></i> Inscription
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages Flash -->
+    <div class="container main-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Contenu principal -->
+        {% block content %}{% endblock %}
+    </div>
+
+    
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

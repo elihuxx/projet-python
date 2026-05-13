@@ -1,0 +1,606 @@
+================================================================================
+        CAHIER DES CHARGES - BIBLIOTHÈQUE HYBRIDE (OPTION 3)
+        Projet : Gestion de Bibliothèque en Ligne
+        Date : Novembre 2025
+        Version : 1.0
+================================================================================
+
+================================================================================
+1. RÉSUMÉ EXÉCUTIF
+================================================================================
+
+Ce cahier des charges définit les modifications à apporter au système existant
+de gestion de bibliothèque pour passer d'une bibliothèque numérique à une
+bibliothèque physique avec gestion hybride (en ligne + sur place).
+
+PRINCIPE : 
+- Les utilisateurs consultent le catalogue en ligne
+- Les emprunts physiques sont enregistrés UNIQUEMENT par l'admin
+- Les utilisateurs peuvent suivre leurs emprunts et demander des prolongements
+- L'admin garde le contrôle total sur les opérations
+
+================================================================================
+2. ÉTAT ACTUEL (CE QUI EXISTE DÉJÀ)
+================================================================================
+
+2.1 MODÈLES DE DONNÉES
+----------------------
+✅ Book (Livre)
+   - title, author, published_date, category, isbn
+   - total_copies (nombre d'exemplaires)
+   - Propriétés calculées : available_copies, is_available
+
+✅ User (Utilisateur/Lecteur)
+   - name, email, membership_date
+   - extensions_this_month, last_reset_date
+   - Méthodes : can_borrow, remaining_extensions, active_borrows_count
+
+✅ Emprunts
+   - book, user, date_emprunt, date_retour
+   - date_fin_prevue, deja_prolonge
+   - Méthodes : extend(), return_book(), is_active, is_overdue, can_extend
+
+2.2 FONCTIONNALITÉS EXISTANTES
+-------------------------------
+✅ Interface Django Admin complète
+✅ Système d'authentification (register, login, logout)
+✅ Catalogue public de consultation
+✅ Page de profil utilisateur
+✅ Gestion des emprunts avec prolongements (7 jours + 5 jours)
+✅ Quotas : 3 emprunts max, 5 prolongements/mois
+✅ Chargement automatique de livres (commande load_books)
+
+2.3 PAGES WEB ACTUELLES
+------------------------
+✅ Page d'accueil
+✅ Catalogue des livres
+✅ Détails d'un livre
+✅ Page de profil utilisateur (avec emprunts en cours)
+✅ Inscription/Connexion/Déconnexion
+
+================================================================================
+3. MODIFICATIONS À APPORTER
+================================================================================
+
+3.1 À SUPPRIMER
+---------------
+❌ Bouton "Emprunter" sur la page des livres (côté utilisateur)
+❌ Bouton "Retourner" sur le profil utilisateur
+❌ Fonctionnalité d'emprunt direct par l'utilisateur
+❌ Bouton "Prolonger" direct (remplacer par "Demander un prolongement")
+
+3.2 À CONSERVER
+---------------
+✅ Catalogue de consultation (utilisateur)
+✅ Page de profil avec liste des emprunts en cours (utilisateur)
+✅ Toutes les fonctionnalités admin existantes
+✅ Système d'authentification
+✅ Calculs automatiques (disponibilité, quotas, dates)
+
+3.3 À AJOUTER
+-------------
+
+A. NOUVEAU MODÈLE : DemandeProlongement
+----------------------------------------
+Champs :
+- emprunt (ForeignKey vers Emprunts)
+- date_demande (DateTimeField, auto_now_add=True)
+- statut (CharField avec choix : en_attente, approuvee, rejetee)
+- motif_rejet (TextField, optionnel)
+- date_traitement (DateTimeField, nullable)
+- traite_par (ForeignKey vers User admin, nullable)
+
+Méthodes :
+- approuver() : Prolonge l'emprunt si possible
+- rejeter(motif) : Rejette avec un motif
+
+B. DASHBOARD ADMIN
+-------------------
+
+B.1 Page d'accueil du dashboard (/admin/dashboard/)
+Sections à afficher :
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    STATISTIQUES GÉNÉRALES                        │
+├─────────────────────────────────────────────────────────────────┤
+│ • Nombre total de livres : XXX                                  │
+│ • Exemplaires disponibles : XXX / XXX                           │
+│ • Utilisateurs inscrits : XXX                                   │
+│ • Emprunts actifs : XXX                                         │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                         ALERTES                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ 🔴 Emprunts en retard : XXX livres                              │
+│    [Liste avec : Utilisateur, Livre, Jours de retard]          │
+│                                                                  │
+│ 🟠 À rendre bientôt (≤2 jours) : XXX livres                     │
+│    [Liste avec : Utilisateur, Livre, Date limite]              │
+│                                                                  │
+│ 🔵 Demandes de prolongement en attente : XXX                    │
+│    [Liste avec : Utilisateur, Livre, Date demande]             │
+│    [Boutons : Approuver | Rejeter]                             │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                  ENREGISTRER UN EMPRUNT                          │
+├─────────────────────────────────────────────────────────────────┤
+│ Formulaire :                                                     │
+│ • Sélectionner un utilisateur (dropdown avec recherche)         │
+│ • Sélectionner un livre (dropdown avec recherche)               │
+│ • Vérifications automatiques :                                  │
+│   - Livre disponible ?                                          │
+│   - Utilisateur peut emprunter ? (< 3 emprunts)                │
+│ • Bouton : [Enregistrer l'emprunt]                             │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                   ENREGISTRER UN RETOUR                          │
+├─────────────────────────────────────────────────────────────────┤
+│ • Liste des emprunts actifs avec bouton "Retourner"            │
+│ • Recherche par utilisateur ou livre                            │
+│ • Action groupée : Retourner plusieurs livres                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                  STATISTIQUES AVANCÉES                           │
+├─────────────────────────────────────────────────────────────────┤
+│ • Top 10 livres les plus empruntés                             │
+│ • Catégories les plus populaires (graphique)                   │
+│ • Activité récente (derniers emprunts/retours)                 │
+│ • Taux d'utilisation de la bibliothèque                        │
+└─────────────────────────────────────────────────────────────────┘
+
+B.2 Fonctionnalités du formulaire d'emprunt
+- Recherche d'utilisateur par nom ou email
+- Recherche de livre par titre, auteur ou ISBN
+- Validation en temps réel de la disponibilité
+- Message d'erreur si quotas dépassés
+- Confirmation de l'enregistrement
+
+C. MODIFICATIONS CÔTÉ UTILISATEUR
+----------------------------------
+
+C.1 Page Catalogue (/books/)
+- GARDER : Liste des livres avec filtres
+- GARDER : Détails (titre, auteur, catégorie, disponibilité)
+- SUPPRIMER : Bouton "Emprunter ce livre"
+- AJOUTER : Badge de disponibilité visuel seulement
+
+C.2 Page Profil (/profile/)
+Sections :
+
+┌─────────────────────────────────────────────────────────────────┐
+│                   MES INFORMATIONS                               │
+├─────────────────────────────────────────────────────────────────┤
+│ • Nom : [Nom de l'utilisateur]                                  │
+│ • Email : [email]                                               │
+│ • Membre depuis : [date]                                        │
+│ • Emprunts actifs : X/3                                         │
+│ • Prolongements ce mois : X/5                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                   MES EMPRUNTS EN COURS                          │
+├─────────────────────────────────────────────────────────────────┤
+│ Pour chaque emprunt :                                           │
+│ • Titre du livre                                                │
+│ • Emprunté le : [date]                                          │
+│ • À retourner avant : [date]                                    │
+│ • Statut : En cours / Bientôt dû / EN RETARD                   │
+│ • Prolongé : Oui/Non                                            │
+│ • Si peut prolonger : [Bouton : Demander un prolongement]      │
+│ • Si demande en cours : [Badge : En attente d'approbation]     │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                   HISTORIQUE DES EMPRUNTS                        │
+├─────────────────────────────────────────────────────────────────┤
+│ • Liste des emprunts passés                                     │
+│ • Filtres : Par date, par livre                                │
+│ • Pagination                                                     │
+└─────────────────────────────────────────────────────────────────┘
+
+C.3 Système de demande de prolongement
+Workflow :
+1. Utilisateur clique sur "Demander un prolongement"
+2. Vérifications automatiques :
+   - Emprunt actif ?
+   - Pas déjà prolongé ?
+   - Quota mensuel disponible ?
+   - Pas en retard ?
+   - Avant J+6 ?
+3. Si OK : Création de DemandeProlongement (statut=en_attente)
+4. Message : "Votre demande a été envoyée. Vous serez notifié."
+5. Badge sur le profil : "En attente d'approbation"
+
+D. NOTIFICATIONS
+----------------
+(Optionnel pour v1, mais à prévoir)
+
+Pour l'admin :
+- Email quand nouvelle demande de prolongement
+- Notification dashboard des emprunts en retard
+
+Pour l'utilisateur :
+- Email de confirmation quand emprunt enregistré
+- Email de rappel 2 jours avant échéance
+- Email quand prolongement approuvé/rejeté
+- Email d'alerte si en retard
+
+================================================================================
+4. RÈGLES MÉTIER (INCHANGÉES)
+================================================================================
+
+4.1 EMPRUNTS
+------------
+- Durée standard : 7 jours
+- Maximum 3 emprunts simultanés par utilisateur
+- Vérification automatique de la disponibilité
+- Enregistrement UNIQUEMENT par l'admin
+
+4.2 PROLONGEMENTS
+-----------------
+- Durée : +5 jours (une seule fois)
+- Maximum 1 prolongement par emprunt
+- Maximum 5 prolongements par mois par utilisateur
+- Possible uniquement jusqu'à J+6
+- Impossible si déjà en retard
+- Demande par l'utilisateur → Approbation par l'admin
+
+4.3 RETOURS
+-----------
+- Enregistrement par l'admin uniquement
+- Libération automatique de l'exemplaire
+- Mise à jour du compteur de disponibilité
+
+4.4 RETARDS
+-----------
+- Calcul automatique si date_fin_prevue dépassée
+- Affichage dans les alertes admin
+- Badge "EN RETARD" sur le profil utilisateur
+
+================================================================================
+5. SPÉCIFICATIONS TECHNIQUES
+================================================================================
+
+5.1 NOUVEAUX FICHIERS À CRÉER
+------------------------------
+library/
+├── models.py [MODIFIER]
+│   └── Ajouter : class DemandeProlongement
+│
+├── views.py [MODIFIER]
+│   ├── dashboard_admin() : Vue du dashboard
+│   ├── enregistrer_emprunt() : Formulaire d'emprunt
+│   ├── enregistrer_retour() : Retour de livre
+│   ├── traiter_demande_prolongement() : Approuver/rejeter
+│   └── demander_prolongement() : Vue côté user
+│
+├── forms.py [CRÉER]
+│   ├── EmpruntForm : Formulaire d'enregistrement d'emprunt
+│   └── DemandeProlongementForm : Formulaire de demande
+│
+├── urls.py [MODIFIER]
+│   ├── path('admin/dashboard/', ...)
+│   ├── path('admin/emprunter/', ...)
+│   ├── path('admin/retourner/<int:id>/', ...)
+│   ├── path('admin/traiter-prolongement/<int:id>/<str:action>/', ...)
+│   └── path('demander-prolongement/<int:emprunt_id>/', ...)
+│
+└── templates/
+    ├── admin/
+    │   ├── dashboard.html [CRÉER]
+    │   ├── enregistrer_emprunt.html [CRÉER]
+    │   └── liste_retours.html [CRÉER]
+    │
+    └── library/
+        └── profile.html [MODIFIER]
+
+5.2 MODIFICATIONS DES TEMPLATES EXISTANTS
+------------------------------------------
+✏️  templates/library/book_list.html
+    - SUPPRIMER : Bouton "Emprunter"
+    - GARDER : Badge de disponibilité
+
+✏️  templates/library/book_detail.html
+    - SUPPRIMER : Bouton "Emprunter ce livre"
+    - GARDER : Informations sur la disponibilité
+
+✏️  templates/library/profile.html
+    - REMPLACER : Bouton "Prolonger" par "Demander un prolongement"
+    - AJOUTER : Badge "En attente" si demande en cours
+    - AJOUTER : Section historique
+
+5.3 MODIFICATIONS DE L'ADMIN DJANGO
+------------------------------------
+✏️  admin.py
+    - Ajouter : DemandeProlongementAdmin
+    - Affichage : user, emprunt, statut, date_demande
+    - Filtres : statut, date_demande
+    - Actions : Approuver en masse, Rejeter en masse
+
+5.4 BASE DE DONNÉES
+-------------------
+Nouvelle migration nécessaire :
+
+python manage.py makemigrations
+python manage.py migrate
+
+Nouvelle table créée : library_demandeprolongement
+
+5.5 PERMISSIONS
+---------------
+Définir les permissions Django :
+
+Pour le dashboard admin :
+- Accès : staff_member_required ou is_superuser
+- Vue : DashboardView (nécessite login admin)
+
+Pour les demandes de prolongement :
+- Accès : login_required (utilisateur connecté)
+- Vérification : Propriétaire de l'emprunt
+
+================================================================================
+6. INTERFACE UTILISATEUR (UI/UX)
+================================================================================
+
+6.1 DESIGN GÉNÉRAL
+------------------
+- Framework CSS : Bootstrap 5 (déjà utilisé)
+- Icônes : Font Awesome 6
+- Couleurs :
+  • Vert : Disponible, Approuvé
+  • Orange : Bientôt dû, En attente
+  • Rouge : En retard, Rejeté
+  • Bleu : Informations
+  • Gris : Inactif
+
+6.2 DASHBOARD ADMIN
+-------------------
+- Layout : Grid responsive (Bootstrap)
+- Cards pour chaque section
+- Graphiques : Chart.js ou similaire (optionnel v1)
+- Tables : DataTables.js pour tri/recherche
+- Formulaires : Validation HTML5 + JavaScript
+
+6.3 PROFIL UTILISATEUR
+----------------------
+- Tabs ou accordéon pour les sections
+- Badges colorés pour les statuts
+- Timeline pour l'historique (optionnel)
+- Responsive mobile-first
+
+================================================================================
+7. WORKFLOW DÉTAILLÉ
+================================================================================
+
+7.1 SCÉNARIO : EMPRUNT D'UN LIVRE
+----------------------------------
+1. Utilisateur consulte le catalogue en ligne
+2. Utilisateur note le livre qui l'intéresse
+3. Utilisateur vient à la bibliothèque avec sa carte
+4. Admin se connecte au dashboard
+5. Admin clique sur "Enregistrer un emprunt"
+6. Admin sélectionne l'utilisateur (recherche par nom/email)
+7. Admin sélectionne le livre (recherche par titre/ISBN)
+8. Système vérifie :
+   ✓ Livre disponible ? (available_copies > 0)
+   ✓ User peut emprunter ? (< 3 emprunts actifs)
+9. Si OK : Emprunt créé, date_fin_prevue = J+7
+10. Système affiche confirmation
+11. Admin donne le livre à l'utilisateur
+12. Utilisateur voit l'emprunt sur son profil en ligne
+
+7.2 SCÉNARIO : DEMANDE DE PROLONGEMENT
+---------------------------------------
+1. Utilisateur se connecte à son profil
+2. Utilisateur voit ses emprunts en cours
+3. Si éligible : Bouton "Demander un prolongement" visible
+4. Utilisateur clique sur le bouton
+5. Système vérifie :
+   ✓ Emprunt actif ?
+   ✓ Pas déjà prolongé ?
+   ✓ Quota mensuel disponible ? (< 5 ce mois)
+   ✓ Avant J+7 ?
+   ✓ Pas en retard ?
+6. Si OK : DemandeProlongement créée (statut=en_attente)
+7. Message : "Demande envoyée"
+8. Badge "En attente" s'affiche sur le profil
+9. Admin voit la demande dans son dashboard
+10. Admin clique "Approuver" ou "Rejeter"
+11. Si approuvé : date_fin_prevue += 5 jours, deja_prolonge=True
+12. Si rejeté : Motif enregistré
+13. Utilisateur voit le résultat sur son profil
+14. (Optionnel) Utilisateur reçoit un email
+
+7.3 SCÉNARIO : RETOUR D'UN LIVRE
+---------------------------------
+1. Utilisateur ramène le livre à la bibliothèque
+2. Admin se connecte au dashboard
+3. Admin va dans "Enregistrer un retour"
+4. Admin recherche l'emprunt (par user ou livre)
+5. Admin clique sur "Retourner"
+6. Système :
+   - Enregistre date_retour = maintenant
+   - Libère l'exemplaire (available_copies++)
+7. Confirmation affichée
+8. Utilisateur ne voit plus l'emprunt dans "En cours"
+9. Emprunt apparaît dans l'historique
+
+================================================================================
+8. TESTS À EFFECTUER
+================================================================================
+
+8.1 TESTS FONCTIONNELS ADMIN
+-----------------------------
+□ Dashboard affiche les bonnes statistiques
+□ Formulaire d'emprunt valide la disponibilité
+□ Formulaire d'emprunt valide les quotas utilisateur
+□ Retour met à jour la disponibilité
+□ Approbation de prolongement met à jour les dates
+□ Rejet de prolongement enregistre le motif
+□ Alertes affichent les bons emprunts
+
+8.2 TESTS FONCTIONNELS UTILISATEUR
+-----------------------------------
+□ Catalogue affiche les livres (pas de bouton emprunt)
+□ Profil affiche les emprunts en cours
+□ Badge "EN RETARD" s'affiche si retard
+□ Bouton prolongement visible seulement si éligible
+□ Demande de prolongement crée bien l'entrée
+□ Badge "En attente" s'affiche après demande
+□ Impossible de demander 2 fois
+□ Historique affiche les anciens emprunts
+
+8.3 TESTS DE VALIDATION
+------------------------
+□ Impossible d'emprunter si livre non disponible
+□ Impossible d'emprunter si 3 emprunts actifs
+□ Impossible de prolonger si déjà prolongé
+□ Impossible de prolonger si quota mensuel atteint
+□ Impossible de prolonger si en retard
+□ Compteur mensuel se réinitialise bien
+
+8.4 TESTS D'INTERFACE
+----------------------
+□ Design responsive (mobile, tablet, desktop)
+□ Formulaires ont validation HTML5
+□ Messages de succès/erreur s'affichent
+□ Couleurs des badges correctes
+□ Recherche dans les dropdowns fonctionne
+
+================================================================================
+9. PRIORITÉS D'IMPLÉMENTATION
+================================================================================
+
+PHASE 1 : CORE (1-2 semaines)
+------------------------------
+1. ✅ Créer le modèle DemandeProlongement + migration
+2. ✅ Créer la vue dashboard admin (structure de base)
+3. ✅ Créer le formulaire d'enregistrement d'emprunt
+4. ✅ Créer la fonctionnalité de retour
+5. ✅ Modifier le profil utilisateur (supprimer boutons emprunt)
+6. ✅ Ajouter bouton "Demander prolongement" côté user
+
+PHASE 2 : DEMANDES (1 semaine)
+-------------------------------
+7. ✅ Implémenter le système de demande de prolongement
+8. ✅ Créer les vues d'approbation/rejet admin
+9. ✅ Ajouter les badges de statut
+10. ✅ Ajouter la section demandes dans le dashboard
+
+PHASE 3 : STATISTIQUES (1 semaine)
+-----------------------------------
+11. ✅ Ajouter les statistiques générales au dashboard
+12. ✅ Créer la section alertes (retards, échéances)
+13. ✅ Ajouter le top 10 des livres
+14. ✅ Ajouter l'historique des emprunts (user)
+
+PHASE 4 : POLISH (optionnel)
+-----------------------------
+15. ⏳ Ajouter graphiques (Chart.js)
+16. ⏳ Implémenter notifications email
+17. ⏳ Ajouter recherche avancée dans le dashboard
+18. ⏳ Export PDF/Excel des rapports
+
+================================================================================
+10. LIVRABLES ATTENDUS
+================================================================================
+
+10.1 CODE
+---------
+□ Nouveau modèle DemandeProlongement
+□ Vues dashboard admin complètes
+□ Formulaires d'emprunt et retour
+□ Templates HTML du dashboard
+□ Templates modifiés (profil, catalogue)
+□ Fichier de migration
+□ URLs mises à jour
+
+10.2 DOCUMENTATION
+------------------
+□ Documentation API des nouvelles vues
+□ Guide d'utilisation pour l'admin
+□ Guide d'utilisation pour l'utilisateur
+□ Schémas de workflow
+□ README mis à jour
+
+10.3 TESTS
+----------
+□ Tests unitaires pour DemandeProlongement
+□ Tests d'intégration pour les workflows
+□ Checklist de tests manuels
+□ Rapport de bugs/corrections
+
+================================================================================
+11. CONTRAINTES ET LIMITATIONS
+================================================================================
+
+11.1 TECHNIQUES
+---------------
+- Django 5.2.7 minimum
+- Python 3.8+
+- Bootstrap 5
+- SQLite en développement
+- Compatible PostgreSQL/MySQL en production
+
+11.2 FONCTIONNELLES
+-------------------
+- Un seul admin à la fois (pas de gestion de conflits)
+- Pas de réservation de livres (peut être phase 5)
+- Pas de scan de code-barres (peut être phase 5)
+- Pas de calcul d'amendes (peut être phase 5)
+
+11.3 SÉCURITÉ
+-------------
+- CSRF protection sur tous les formulaires
+- Permissions strictes (admin vs user)
+- Validation côté serveur obligatoire
+- Pas de données sensibles en GET
+
+================================================================================
+12. CRITÈRES DE SUCCÈS
+================================================================================
+
+Le projet sera considéré comme réussi si :
+
+✓ L'admin peut enregistrer emprunts et retours en < 1 minute
+✓ L'utilisateur peut suivre ses emprunts en temps réel
+✓ Les demandes de prolongement sont traitées en < 24h
+✓ Aucune double attribution de livre possible
+✓ Les quotas sont respectés automatiquement
+✓ Le dashboard affiche les bonnes statistiques
+✓ L'interface est intuitive (pas de formation nécessaire)
+✓ Le système est stable (pas de bugs critiques)
+✓ Le code est maintenable (commenté, structuré)
+
+================================================================================
+13. ANNEXES
+================================================================================
+
+13.1 GLOSSAIRE
+--------------
+- Admin : Bibliothécaire avec accès au dashboard Django
+- User : Lecteur inscrit, peut consulter et demander prolongements
+- Emprunt actif : Emprunt non retourné (date_retour = NULL)
+- Quota : Limite de 3 emprunts et 5 prolongements/mois
+- Dashboard : Interface de gestion pour l'admin
+
+13.2 RESSOURCES
+---------------
+- Documentation Django : https://docs.djangoproject.com/
+- Bootstrap 5 : https://getbootstrap.com/
+- Chart.js : https://www.chartjs.org/ (si graphiques)
+- Font Awesome : https://fontawesome.com/
+
+13.3 CONTACTS
+-------------
+- Développeur : [Votre nom]
+- Date de début : Novembre 2025
+- Durée estimée : 3-4 semaines
+
+================================================================================
+FIN DU CAHIER DES CHARGES
+================================================================================

@@ -1,0 +1,163 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Mon Profil - Bibliothèque en Ligne{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Mon Profil</h2>
+            <a href="{% url 'library:home' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Accueil
+            </a>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Informations</h5>
+                        <p class="mb-2"><strong>Nom :</strong> {{ library_user.name }}</p>
+                        <p class="mb-2"><strong>Email :</strong> {{ library_user.email }}</p>
+                        <p class="mb-0"><strong>Membre depuis :</strong> {{ library_user.membership_date|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h3 class="text-primary">{{ library_user.active_borrows_count }}/3</h3>
+                                <p class="text-muted mb-0">Emprunts actifs</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h3 class="text-success">{{ library_user.remaining_extensions }}/5</h3>
+                                <p class="text-muted mb-0">Prolongements restants ce mois</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <h5 class="mb-3">Emprunts en cours</h5>
+                {% if active_borrows %}
+                    <ul class="list-group">
+                        {% for emprunt in active_borrows %}
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ emprunt.book.title }}</strong><br>
+                                        <small class="text-muted">
+                                            Emprunté le {{ emprunt.date_emprunt|date:"d/m/Y" }} •
+                                            À rendre le {{ emprunt.date_fin_prevue|date:"d/m/Y" }}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        {% if emprunt.is_overdue %}
+                                            <span class="badge bg-danger">EN RETARD</span>
+                                        {% elif emprunt.days_remaining == 0 %}
+                                            <span class="badge bg-warning">Aujourd'hui</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ emprunt.days_remaining }} j</span>
+                                        {% endif %}
+                                        {% if emprunt.deja_prolonge %}
+                                            <span class="badge bg-info ms-1">Prolongé</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        {% if emprunt.id in pending_requests_ids %}
+                                            <span class="badge bg-warning text-dark">En attente d'approbation</span>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        {% if emprunt.can_extend and not emprunt.is_overdue and not emprunt.deja_prolonge and emprunt.id not in pending_requests_ids %}
+                                            <form method="post" action="{% url 'library:demander_prolongement' emprunt.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-clock"></i> Demander un prolongement
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-info">Aucun emprunt en cours.</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <h5 class="mb-3">Historique récent</h5>
+                {% if history %}
+                    <ul class="list-group">
+                        {% for emprunt in history %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ emprunt.book.title }}</strong><br>
+                                    <small class="text-muted">Rendu le {{ emprunt.date_retour|date:"d/m/Y" }}</small>
+                                </div>
+                                {% if emprunt.deja_prolonge %}
+                                    <span class="badge bg-info">Prolongé</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-light border">Aucun historique récent.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <hr class="my-5">
+
+        <div class="card bg-white text-dark border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Règles d'utilisation de la bibliothèque</h5>
+                <p class="mb-2">
+                    Les emprunts sont effectués au nom de votre compte lecteur. Vous pouvez emprunter un livre
+                    directement depuis le site, en cliquant sur le bouton <strong>Emprunter</strong> sur la fiche du livre,
+                    ou auprès d'un <strong>bibliothécaire</strong> qui enregistre l'emprunt pour vous au comptoir.
+                </p>
+                <p class="mb-2">
+                    Vous pouvez avoir au maximum <strong>3 emprunts actifs</strong> en même temps. Chaque emprunt dure
+                    en principe <strong>7 jours</strong>. Après avoir rendu un livre, vous devez attendre
+                    <strong>1 jour</strong> avant de pouvoir réemprunter le même titre.
+                </p>
+                <p class="mb-2">
+                    Vous pouvez demander un <strong>prolongement de 5 jours</strong> pour un emprunt, une seule fois,
+                    lorsqu'il reste exactement <strong>1 jour</strong> avant la date de fin prévue, et dans la limite de
+                    <strong>5 prolongements par mois</strong>. Les demandes se font depuis cette page et sont ensuite
+                    traitées par un bibliothécaire.
+                </p>
+                <p class="mb-2">
+                    Un emprunt devient <strong>en retard</strong> dès le lendemain de la date de fin prévue. En cas de
+                    retards répétés, l'équipe peut limiter temporairement vos nouveaux emprunts, conformément au
+                    règlement interne de la bibliothèque.
+                </p>
+                <p class="mb-0">
+                    Pour toute question ou situation particulière, adressez-vous à un <strong>bibliothécaire</strong>
+                    sur place ou via les coordonnées indiquées sur le site. Vous pouvez consulter la version détaillée
+                    des règles <a href="{% url 'library:terms' %}">sur cette page</a>.
+                </p>
+            </div>
+        </div>
+
+    </div>
+    
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,107 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Catalogue - Bibliothèque en Ligne{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Catalogue de Livres</h2>
+        
+        <!-- Barre de recherche et filtres -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" action="{% url 'library:catalog' %}">
+                    <div class="row g-3">
+                        <!-- Recherche -->
+                        <div class="col-md-5">
+                            <input type="text" 
+                                   name="search" 
+                                   class="form-control" 
+                                   placeholder="Rechercher par titre, auteur..." 
+                                   value="{{ search_query }}">
+                        </div>
+                        
+                        <!-- Filtre catégorie -->
+                        <div class="col-md-3">
+                            <select name="category" class="form-select">
+                                <option value="">Toutes les catégories</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat }}" {% if cat == category_filter %}selected{% endif %}>
+                                        {{ cat }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Filtre disponibilité -->
+                        <div class="col-md-2">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       name="available" 
+                                       value="true" 
+                                       id="availableOnly"
+                                       {% if available_only == 'true' %}checked{% endif %}>
+                                <label class="form-check-label" for="availableOnly">
+                                    Disponibles uniquement
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Boutons -->
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Rechercher</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Résultats -->
+        {% if books %}
+            <div class="row">
+                {% for book in books %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ book.title }}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">{{ book.author }}</h6>
+                                
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <strong>Catégorie :</strong> {{ book.category }}<br>
+                                        <strong>ISBN :</strong> {{ book.isbn }}<br>
+                                        <strong>Publié :</strong> {{ book.published_date|date:"Y" }}
+                                    </small>
+                                </p>
+                                
+                                <!-- Disponibilité -->
+                                <div class="mb-3">
+                                    {% if book.is_available %}
+                                        <span class="badge bg-success">
+                                            {{ book.available_copies }}/{{ book.total_copies }} disponible(s)
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            Tous empruntés
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Bouton d'action -->
+                                <a href="{% url 'library:book_detail' book.id %}" class="btn btn-outline-primary btn-sm">
+                                    Voir les détails
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                Aucun livre trouvé. Essayez de modifier vos critères de recherche.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

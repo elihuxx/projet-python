@@ -1,0 +1,105 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Accueil - Bibliothèque en Ligne{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-body text-center p-5">
+                <h1 class="mb-4">
+                    <i class="fas fa-book-reader text-primary"></i>
+                    Bienvenue dans votre Bibliothèque en Ligne
+                </h1>
+                
+                {% if user.is_authenticated %}
+                    <p class="mb-4">
+                        Bienvenue <strong>{{ user_name }}</strong> !
+                    </p>
+                    <p class="text-muted mb-4">
+                        Explorez notre catalogue de livres et gérez vos emprunts facilement.
+                    </p>
+                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                        <span>
+                            Les <strong>règles d'utilisation</strong> sont disponibles sur votre profil.
+                        </span>
+                        <a href="{% url 'library:profile' %}" class="btn btn-sm btn-outline-primary">Voir mon profil</a>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-book fa-2x text-primary mb-2"></i>
+                                    <h6>Catalogue</h6>
+                                    <p class="text-muted small">Parcourez nos livres</p>
+                                    <a href="{% url 'library:catalog' %}" class="btn btn-outline-primary btn-sm">Explorer</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-bookmark fa-2x text-success mb-2"></i>
+                                    <h6>Mes Emprunts</h6>
+                                    <p class="text-muted small">Vos livres empruntés</p>
+                                    <a href="{% url 'library:my_borrows' %}" class="btn btn-outline-success btn-sm">Voir</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-user fa-2x text-secondary mb-2"></i>
+                                    <h6>Mon Profil</h6>
+                                    <p class="text-muted small">Vos informations</p>
+                                <a href="{% url 'library:profile' %}" class="btn btn-outline-secondary btn-sm">Accéder</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="mb-3">
+                        Découvrez notre collection de livres et empruntez vos favoris.
+                    </p>
+                    <p class="text-muted mb-4">
+                        Inscrivez-vous gratuitement pour commencer.
+                    </p>
+                    
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'library:register' %}" class="btn btn-primary me-2">
+                            <i class="fas fa-user-plus"></i> S'inscrire
+                        </a>
+                        <a href="{% url 'library:login' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-sign-in-alt"></i> Se connecter
+                        </a>
+                    </div>
+                    
+                    <div class="row mt-5">
+                        <div class="col-md-4 mb-3">
+                            <i class="fas fa-book-open fa-2x text-primary mb-2"></i>
+                            <h6>Large Catalogue</h6>
+                            <p class="text-muted small">De nombreux livres disponibles</p>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <i class="fas fa-clock fa-2x text-success mb-2"></i>
+                            <h6>Emprunt Facile</h6>
+                            <p class="text-muted small">Empruntez pour 7 jours</p>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <i class="fas fa-shield-alt fa-2x text-secondary mb-2"></i>
+                            <h6>100% Gratuit</h6>
+                            <p class="text-muted small">Aucun frais</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

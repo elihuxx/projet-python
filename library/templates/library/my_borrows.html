@@ -1,0 +1,118 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Mes Emprunts - Bibliothèque en Ligne{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Mes Emprunts</h2>
+        
+        <!-- Statistiques utilisateur -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h3 class="text-primary">{{ library_user.active_borrows_count }}/3</h3>
+                        <p class="mb-0 text-muted">Emprunts actifs</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h3 class="text-success">{{ library_user.remaining_extensions }}/5</h3>
+                        <p class="mb-0 text-muted">Prolongements restants ce mois</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Emprunts actifs -->
+        <h4 class="mb-3">Emprunts en cours</h4>
+        
+        {% if active_borrows %}
+            <div class="row">
+                {% for emprunt in active_borrows %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card {% if emprunt.is_overdue %}border-danger{% elif emprunt.days_remaining <= 2 %}border-warning{% endif %}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ emprunt.book.title }}</h5>
+                                <h6 class="card-subtitle mb-3 text-muted">{{ emprunt.book.author }}</h6>
+                                
+                                <div class="mb-3">
+                                    <p class="mb-1">
+                                        <strong>Emprunté le :</strong> {{ emprunt.date_emprunt|date:"d/m/Y" }}
+                                    </p>
+                                    <p class="mb-1">
+                                        <strong>À retourner le :</strong> {{ emprunt.date_fin_prevue|date:"d/m/Y" }}
+                                    </p>
+                                    <p class="mb-1">
+                                        <strong>Jours restants :</strong>
+                                        {% if emprunt.is_overdue %}
+                                            <span class="badge bg-danger">EN RETARD</span>
+                                        {% elif emprunt.days_remaining == 0 %}
+                                            <span class="badge bg-warning">Aujourd'hui</span>
+                                        {% elif emprunt.days_remaining <= 2 %}
+                                            <span class="badge bg-warning">{{ emprunt.days_remaining }} jour(s)</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ emprunt.days_remaining }} jour(s)</span>
+                                        {% endif %}
+                                    </p>
+                                    {% if emprunt.deja_prolonge %}
+                                        <p class="mb-0">
+                                            <span class="badge bg-info">Déjà prolongé</span>
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Vous n'avez aucun emprunt en cours.
+                <a href="{% url 'library:catalog' %}" class="alert-link">Parcourir le catalogue</a>
+            </div>
+        {% endif %}
+        
+        <!-- Historique -->
+        {% if history %}
+            <hr class="my-5">
+            <h4 class="mb-3">Historique récent</h4>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Livre</th>
+                            <th>Emprunté le</th>
+                            <th>Retourné le</th>
+                            <th>Prolongé</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emprunt in history %}
+                            <tr>
+                                <td>
+                                    <strong>{{ emprunt.book.title }}</strong><br>
+                                    <small class="text-muted">{{ emprunt.book.author }}</small>
+                                </td>
+                                <td>{{ emprunt.date_emprunt|date:"d/m/Y" }}</td>
+                                <td>{{ emprunt.date_retour|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if emprunt.deja_prolonge %}
+                                        <span class="badge bg-info">Oui</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Non</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
